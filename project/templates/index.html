@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probability Distribution Visualizer</title>
+    <!-- Add MathJax for formula rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            color: #fff;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 1000px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .formula-container {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .formula-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #1e3c72;
+        }
+
+        .robot-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 60%;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .robot {
+            width: 100px;
+            height: 120px;
+            background: #ffcc00;
+            border-radius: 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+        }
+
+        .eyes {
+            display: flex;
+            justify-content: space-between;
+            width: 60%;
+            position: absolute;
+            top: 20px;
+        }
+
+        .eye {
+            width: 12px;
+            height: 12px;
+            background: black;
+            border-radius: 50%;
+        }
+
+        .mouth {
+            width: 30px;
+            height: 8px;
+            background: black;
+            position: absolute;
+            bottom: 15px;
+            border-radius: 4px;
+            transition: transform 0.3s ease;
+        }
+
+        /* Robot Hands */
+        .hand {
+            width: 15px;
+            height: 40px;
+            background: #ffcc00;
+            position: absolute;
+            top: 40px;
+            border-radius: 5px;
+            transition: transform 0.3s ease;
+        }
+
+        .hand.left {
+            left: -20px;
+        }
+
+        .hand.right {
+            right: -20px;
+        }
+
+        /* Speech Bubble */
+        .speech-bubble {
+            position: absolute;
+            right: 120px;  /* Changed from left to right */
+            top: 0;
+            background: white;
+            color: black;
+            padding: 10px 15px;
+            border-radius: 10px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .speech-bubble:after {
+            content: "";
+            position: absolute;
+            right: -10px;  /* Changed from left to right */
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent transparent transparent white;  /* Changed arrow direction */
+        }
+
+        .show-bubble {
+            display: block;
+        }
+
+        /* Listening Animation */
+        .listening .mouth {
+            animation: talking 0.5s infinite alternate;
+        }
+
+        .listening .hand.left {
+            transform: translateX(10px) rotate(-30deg);
+        }
+
+        @keyframes talking {
+            from { transform: scaleY(1); }
+            to { transform: scaleY(1.8); }
+        }
+
+        /* Microphone Button */
+        #micButton {
+            background: #ff9800;
+            padding: 15px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-left: 20px;
+        }
+
+        #micButton:hover {
+            background: #e65100;
+        }
+
+        select, button {
+            font-size: 16px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        select {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            background: linear-gradient(45deg, #ff4081, #e91e63);
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4);
+        }
+
+        .param-container {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .param-container input {
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .param-container input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 64, 129, 0.5);
+        }
+
+        .plot-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+        }
+
+        .plot-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+    </style>
+</head>
+<body>
+
+    <h2>🎲 Probability Distribution Visualizer 🎲</h2>
+    
+    <div class="container">
+        <label for="distribution">Choose Distribution:</label>
+        <select id="distribution" onchange="showRelevantParams()">
+            <option value="exponential">Exponential</option>
+            <option value="gaussian">Gaussian (Normal)</option>
+            <option value="uniform">Uniform</option>
+            <option value="rayleigh">Rayleigh</option>
+            <option value="binomial">Binomial</option>
+            <option value="poisson">Poisson</option>
+            <option value="laplacian">Laplacian</option>
+        </select>
+
+        <div class="formula-container" id="formulaContainer">
+            <div class="formula-title">Mathematical Formula:</div>
+            <div id="formula"></div>
+        </div>
+
+        <div id="paramInputs" class="param-container">
+            <!-- Parameter inputs will be dynamically added here -->
+        </div>
+
+        <label for="plotType">Choose Plot Type:</label>
+        <select id="plotType">
+            <option value="density">Density (PDF)</option>
+            <option value="distribution">Distribution (Histogram)</option>
+            <option value="both">Both</option>
+        </select>
+
+        <button onclick="generatePlot()">📊 Generate Plot</button>
+    </div>
+
+    <div class="robot-container"></div>
+        <div class="robot" id="robot">
+            <div class="eyes">
+                <div class="eye"></div>
+                <div class="eye"></div>
+            </div>
+            <div class="mouth" id="robotMouth"></div>
+            <div class="hand left"></div>
+            <div class="hand right"></div>
+            <div class="speech-bubble" id="speechBubble"></div>
+        </div>
+        <button id="micButton" onclick="startListening()">🎤</button>
+    </div>
+
+    <div class="plot-container">
+        <h3>Plot Output:</h3>
+        <img id="plot" src="" alt="Generated Plot Will Appear Here">
+    </div>
+
+    <script>
+        function validateParams(distribution, params) {
+            if (distribution === 'binomial') {
+                if (params.p < 0 || params.p > 1) {
+                    alert('Probability (p) must be between 0 and 1');
+                    return false;
+                }
+                if (params.n < 0 || !Number.isInteger(params.n)) {
+                    alert('Number of trials (n) must be a non-negative integer');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function generatePlot() {
+            const distribution = document.getElementById("distribution").value;
+            const plotType = document.getElementById("plotType").value;
+            const params = {};
+
+            // Collect parameter values
+            distributionParams[distribution].forEach(param => {
+                const value = document.getElementById(param.name).value;
+                params[param.name] = parseFloat(value);
+            });
+
+            // Validate parameters before sending
+            if (!validateParams(distribution, params)) {
+                return;
+            }
+
+            fetch("/get_pdf", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ distribution, plotType, params })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.image) {
+                    document.getElementById("plot").src = "data:image/png;base64," + data.image;
+                } else if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert("Invalid selection! Please try again.");
+                }
+            });
+        }
+
+        // Update the binomial parameter input to have proper constraints
+        const distributionParams = {
+            exponential: [
+                { name: 'rate', default: 1.0, label: 'Rate (λ)' }
+            ],
+            gaussian: [
+                { name: 'mean', default: 0, label: 'Mean' },
+                { name: 'std', default: 1, label: 'Standard Deviation' }
+            ],
+            uniform: [
+                { name: 'a', default: -10, label: 'Lower Bound' },
+                { name: 'b', default: 10, label: 'Upper Bound' }
+            ],
+            rayleigh: [
+                { name: 'scale', default: 2, label: 'Scale' }
+            ],
+            binomial: [
+                { name: 'n', default: 20, label: 'Number of Trials', min: 0, step: 1 },
+                { name: 'p', default: 0.5, label: 'Probability', min: 0, max: 1, step: 0.01 }
+            ],
+            poisson: [
+                { name: 'lambda', default: 5, label: 'Rate Parameter' }
+            ],
+            laplacian: [
+                { name: 'location', default: 0, label: 'Location' },
+                { name: 'scale', default: 2, label: 'Scale' }
+            ]
+        };
+
+        const distributionFormulas = {
+            exponential: {
+                pdf: "f(x) = \\lambda e^{-\\lambda x}, \\quad x \\geq 0",
+                description: "Rate parameter λ controls the speed of exponential decay"
+            },
+            gaussian: {
+                pdf: "f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}",
+                description: "μ is the mean and σ is the standard deviation"
+            },
+            uniform: {
+                pdf: "f(x) = \\frac{1}{b-a}, \\quad a \\leq x \\leq b",
+                description: "a is the lower bound and b is the upper bound"
+            },
+            rayleigh: {
+                pdf: "f(x) = \\frac{x}{\\sigma^2} e^{-x^2/(2\\sigma^2)}, \\quad x \\geq 0",
+                description: "σ is the scale parameter"
+            },
+            binomial: {
+                pdf: "P(X=k) = \\binom{n}{k} p^k (1-p)^{n-k}",
+                description: "n is the number of trials and p is the probability of success"
+            },
+            poisson: {
+                pdf: "P(X=k) = \\frac{\\lambda^k e^{-\\lambda}}{k!}",
+                description: "λ is the rate parameter (average number of events)"
+            },
+            laplacian: {
+                pdf: "f(x) = \\frac{1}{2b} e^{-\\frac{|x-\\mu|}{b}}",
+                description: "μ is the location parameter and b is the scale parameter"
+            }
+        };
+
+        function showRelevantParams() {
+            const distribution = document.getElementById("distribution").value;
+            const container = document.getElementById("paramInputs");
+            const formulaContainer = document.getElementById("formulaContainer");
+            const formulaDiv = document.getElementById("formula");
+            
+            // Show formula
+            formulaContainer.style.display = "block";
+            formulaDiv.innerHTML = `
+                \\[${distributionFormulas[distribution].pdf}\\]
+                <p style="margin-top: 10px; font-style: italic;">${distributionFormulas[distribution].description}</p>
+            `;
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise && MathJax.typesetPromise();
+            }
+
+            // Show parameters with constraints
+            container.innerHTML = '';
+            distributionParams[distribution].forEach(param => {
+                const div = document.createElement('div');
+                const input = document.createElement('input');
+                input.type = "number";
+                input.id = param.name;
+                input.value = param.default;
+                input.step = param.step || "0.1";
+                if (param.min !== undefined) input.min = param.min;
+                if (param.max !== undefined) input.max = param.max;
+                
+                div.innerHTML = `<label for="${param.name}">${param.label}:</label>`;
+                div.appendChild(input);
+                container.appendChild(div);
+            });
+        }
+
+        function parseNumberFromSpeech(text) {
+            const matches = text.match(/-?\d+\.?\d*/g);
+            return matches ? parseFloat(matches[0]) : null;
+        }
+
+        function startListening() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            const robot = document.getElementById("robot");
+            const hand = document.querySelector(".hand.left");
+            const speechBubble = document.getElementById("speechBubble");
+
+            recognition.lang = "en-US";
+            recognition.continuous = true;
+            recognition.start();
+            robot.classList.add("listening");
+            hand.classList.add("listening");
+
+            recognition.onresult = function(event) {
+                const speechResult = event.results[0][0].transcript.toLowerCase();
+                speechBubble.classList.add("show-bubble");
+                speechBubble.innerText = `"${speechResult}"`;
+                robot.classList.remove("listening");
+                hand.classList.remove("listening");
+
+                // Distribution recognition
+                const validDistributions = Object.keys(distributionParams);
+                let recognizedDist = validDistributions.find(d => speechResult.includes(d));
+                
+                if (recognizedDist) {
+                    document.getElementById("distribution").value = recognizedDist;
+                    showRelevantParams();
+                }
+
+                // Parameter recognition
+                const params = distributionParams[document.getElementById("distribution").value];
+                params.forEach(param => {
+                    if (speechResult.includes(param.name) || speechResult.includes(param.label.toLowerCase())) {
+                        const value = parseNumberFromSpeech(speechResult);
+                        if (value !== null) {
+                            document.getElementById(param.name).value = value;
+                        }
+                    }
+                });
+
+                // Generate plot if command is given
+                if (speechResult.includes("generate") || speechResult.includes("plot") || speechResult.includes("show")) {
+                    generatePlot();
+                }
+            };
+
+            recognition.onerror = function(event) {
+                alert("Speech recognition error: " + event.error);
+                robot.classList.remove("listening");
+                hand.classList.remove("listening");
+            };
+        }
+
+        // Initialize parameter inputs
+        showRelevantParams();
+    </script>
+
+</body>
+</html>
